@@ -26,4 +26,4 @@ jobs:
           context: ./openeuler
           file: ./openeuler/Dockerfile
           push: true
-          tags: docker.io/kaii0713/euler_repository:openeuler
+          tags: docker.io/kaii0713/euler_repository/openeuler
