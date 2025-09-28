@@ -38,7 +38,7 @@ jobs:
           platforms: ${{ matrix.arch }}
           tags: |
             
-            docker.io/zhihang161013/openeuler
+            docker.io/kaii0713/euler_repository/openeuler
             
           file: ${{ github.workspace }}/openeuler/Dockerfile
           context: ${{ github.workspace }}/openeuler
@@ -86,8 +86,8 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           
-          docker buildx imagetools create -t docker.io/zhihang161013/openeuler:25.03 \
-            $(printf 'zhihang161013/openeuler@sha256:%s ' *)
+          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/openeuler:25.03 \
+            $(printf 'kaii0713/euler_repository/openeuler@sha256:%s ' *)
           
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
@@ -105,7 +105,7 @@ jobs:
       #           "info": {
       #             "archs": ["x86_64"],
       #             "registries": ["docker.io"],
-      #             "repository": "zhihang161013",
+      #             "repository": "kaii0713/euler_repository",
       #             "name": "openeuler",
       #             "version": "25.03",
       #             "tag": "25.03",
@@ -161,7 +161,7 @@ jobs:
           platforms: ${{ matrix.arch }}
           tags: |
             
-            docker.io/zhihang161013/python
+            docker.io/kaii0713/euler_repository/python
             
           file: ${{ github.workspace }}/python/Dockerfile
           context: ${{ github.workspace }}/python
@@ -209,8 +209,8 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           
-          docker buildx imagetools create -t docker.io/zhihang161013/python:3.10.1-oe2503 \
-            $(printf 'zhihang161013/python@sha256:%s ' *)
+          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/python:3.10.1-oe2503 \
+            $(printf 'kaii0713/euler_repository/python@sha256:%s ' *)
           
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
@@ -228,7 +228,7 @@ jobs:
       #           "info": {
       #             "archs": ["x86_64"],
       #             "registries": ["docker.io"],
-      #             "repository": "zhihang161013",
+      #             "repository": "kaii0713/euler_repository",
       #             "name": "python",
       #             "version": "3.10.1",
       #             "tag": "3.10.1-oe2503",
@@ -284,7 +284,7 @@ jobs:
           platforms: ${{ matrix.arch }}
           tags: |
             
-            docker.io/zhihang161013/pytorch
+            docker.io/kaii0713/euler_repository/pytorch
             
           file: ${{ github.workspace }}/pytorch/Dockerfile
           context: ${{ github.workspace }}/pytorch
@@ -332,8 +332,8 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           
-          docker buildx imagetools create -t docker.io/zhihang161013/pytorch:2.5.0-python3.10.1-oe2503 \
-            $(printf 'zhihang161013/pytorch@sha256:%s ' *)
+          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/pytorch:2.5.0-python3.10.1-oe2503 \
+            $(printf 'kaii0713/euler_repository/pytorch@sha256:%s ' *)
           
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
@@ -351,7 +351,7 @@ jobs:
       #           "info": {
       #             "archs": ["x86_64"],
       #             "registries": ["docker.io"],
-      #             "repository": "zhihang161013",
+      #             "repository": "kaii0713/euler_repository",
       #             "name": "pytorch",
       #             "version": "2.5.0",
       #             "tag": "2.5.0-python3.10.1-oe2503",
