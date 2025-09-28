@@ -1,5 +1,5 @@
 ARG BASE=kaii0713/euler_repository/openeuler:25.03
-ARG VERSION=3.10.1
+ARG VERSION=3.8.1
 
 FROM ${BASE} as builder
 
