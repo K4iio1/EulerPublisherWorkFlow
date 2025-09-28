@@ -31,7 +31,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build and push by digest
         uses: docker/build-push-action@v6
         id: build
         with: 
@@ -42,7 +42,7 @@ jobs:
             
           file: ${{ github.workspace }}/openeuler/Dockerfile
           context: ${{ github.workspace }}/openeuler
-          outputs: type=image,name-canonical=true,push=true
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
@@ -86,7 +86,7 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/openeuler:25.03 \
+          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/openeuler:22.03-lts \
             $(printf 'kaii0713/euler_repository/openeuler@sha256:%s ' *)
           
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
@@ -107,8 +107,8 @@ jobs:
       #             "registries": ["docker.io"],
       #             "repository": "kaii0713/euler_repository",
       #             "name": "openeuler",
-      #             "version": "25.03",
-      #             "tag": "25.03",
+      #             "version": "22.03.LTS",
+      #             "tag": "22.03-lts",
       #             "status": "${{ job.status }}"
       #           }
       #         }
@@ -154,7 +154,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build and push by digest
         uses: docker/build-push-action@v6
         id: build
         with: 
@@ -165,7 +165,7 @@ jobs:
             
           file: ${{ github.workspace }}/python/Dockerfile
           context: ${{ github.workspace }}/python
-          outputs: type=image,name-canonical=true,push=true
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
@@ -209,7 +209,7 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/python:3.10.1-oe2503 \
+          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/python:3.10.1-oe2203lts \
             $(printf 'kaii0713/euler_repository/python@sha256:%s ' *)
           
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
@@ -231,7 +231,7 @@ jobs:
       #             "repository": "kaii0713/euler_repository",
       #             "name": "python",
       #             "version": "3.10.1",
-      #             "tag": "3.10.1-oe2503",
+      #             "tag": "3.10.1-oe2203lts",
       #             "status": "${{ job.status }}"
       #           }
       #         }
