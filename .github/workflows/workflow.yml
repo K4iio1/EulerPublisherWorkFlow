@@ -79,9 +79,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build-openeuler
-    if: False
     steps:
       - name: Download digests
+        if: False
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/digests
@@ -90,6 +90,7 @@ jobs:
 
       
       - name: Login to docker.io
+        if: False
         uses: docker/login-action@v3
         with:
           registry: docker.io
@@ -98,9 +99,11 @@ jobs:
       
 
       - name: Set up Docker Buildx
+        if: False
         uses: docker/setup-buildx-action@v3
 
       - name: Create manifest list and push
+        if: False
         working-directory: ${{ runner.temp }}/digests
         run: |
           
@@ -220,9 +223,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build-python
-    if: True
     steps:
       - name: Download digests
+        if: True
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/digests
@@ -231,6 +234,7 @@ jobs:
 
       
       - name: Login to docker.io
+        if: True
         uses: docker/login-action@v3
         with:
           registry: docker.io
@@ -239,9 +243,11 @@ jobs:
       
 
       - name: Set up Docker Buildx
+        if: True
         uses: docker/setup-buildx-action@v3
 
       - name: Create manifest list and push
+        if: True
         working-directory: ${{ runner.temp }}/digests
         run: |
           
