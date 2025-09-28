@@ -33,7 +33,7 @@ jobs:
 
       # 对 openeuler 特殊处理，原模板 git action 会报错显示 openeuler 无法通过digest处理
       - name: Build and push multi-arch (for openeuler)
-        if: $True
+        if: True
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ matrix.arch }}
@@ -46,7 +46,7 @@ jobs:
           push: true
 
       - name: Build and push by digest
-        if: $False
+        if: False
         uses: docker/build-push-action@v6
         id: build
         with: 
@@ -60,14 +60,14 @@ jobs:
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
-        if: $False
+        if: False
         run: |
           mkdir -p ${{ runner.temp }}/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        if: $False
+        if: False
         uses: actions/upload-artifact@v4
         with:
           name: digests-openeuler-${{ matrix.arch }}
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build-openeuler
-    if: $False
+    if: False
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
@@ -174,7 +174,7 @@ jobs:
 
       # 对 openeuler 特殊处理，原模板 git action 会报错显示 openeuler 无法通过digest处理
       - name: Build and push multi-arch (for openeuler)
-        if: $False
+        if: False
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ matrix.arch }}
@@ -187,7 +187,7 @@ jobs:
           push: true
 
       - name: Build and push by digest
-        if: $True
+        if: True
         uses: docker/build-push-action@v6
         id: build
         with: 
@@ -201,14 +201,14 @@ jobs:
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
-        if: $True
+        if: True
         run: |
           mkdir -p ${{ runner.temp }}/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        if: $True
+        if: True
         uses: actions/upload-artifact@v4
         with:
           name: digests-python-${{ matrix.arch }}
@@ -220,7 +220,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build-python
-    if: $True
+    if: True
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
