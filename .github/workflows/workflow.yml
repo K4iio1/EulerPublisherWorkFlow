@@ -23,6 +23,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
+          file: ./python/Dockerfile
           push: true
           tags: docker.io/kaii0713/euler_repository:demo
