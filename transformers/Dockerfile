@@ -1,4 +1,4 @@
-ARG BASE=kaii0713/euler_repository-pytorch:2.5.0-python3.10.1-oe2503
+ARG BASE=kaii0713/euler_repository-python:3.10.1-oe2503
 
 ARG VERSION=4.55.4
 
