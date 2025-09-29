@@ -37,6 +37,8 @@ jobs:
         id: build
         with: 
           platforms: ${{ matrix.arch }}
+          tags: |
+            docker.io/kaii0713/euler_repository/python
           file: ${{ github.workspace }}/python/Dockerfile
           context: ${{ github.workspace }}/python
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
