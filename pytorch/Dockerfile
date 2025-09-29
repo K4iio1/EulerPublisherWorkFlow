@@ -1,6 +1,6 @@
-ARG BASE=kaii0713/euler_repository-python:3.13.3-oe2203lts
+ARG BASE=kaii0713/euler_repository-transformers:4.50.0-huggingface_hubV0.35.0-python3.10.1-oe2503
 
-ARG VERSION=1.11.0
+ARG VERSION=2.5.0
 
 FROM ${BASE}
 
