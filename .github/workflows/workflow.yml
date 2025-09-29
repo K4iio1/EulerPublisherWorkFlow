@@ -11,10 +11,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - arch: linux/amd64
+          - arch: x86_64
             runner: ubuntu-latest
-          - arch: linux/arm64
-            runner: ubuntu-latest-arm
 
     runs-on: ${{ matrix.runner }}
     steps:
@@ -39,9 +37,9 @@ jobs:
         with: 
           platforms: ${{ matrix.arch }}
           tags: |
-            docker.io/${{ secrets.DOCKER_USERNAME }}/python-demo
-          file: ${{ github.workspace }}/python-demo/Dockerfile
-          context: ${{ github.workspace }}/python-demo
+            docker.io/kaii0713/euler_repository/python-demo
+          file: ${{ github.workspace }}/python/Dockerfile
+          context: ${{ github.workspace }}/python
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
