@@ -1,4 +1,4 @@
-ARG BASE=Qwen3-Coder-30B-A3B-Instruct-python:3.10.1-oe2503
+ARG BASE=kaii0713/euler_repository-python:3.10.1-oe2503
 
 ARG VERSION=2.5.0
 
