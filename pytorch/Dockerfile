@@ -1,4 +1,4 @@
-ARG BASE=kaii0713/euler_repository/python:3.10.1-oe2203lts
+ARG BASE=kaii0713/euler_repository-python:3.10.1-oe2503
 
 ARG VERSION=2.5.0
 
