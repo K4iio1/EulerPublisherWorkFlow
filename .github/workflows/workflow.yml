@@ -2,137 +2,26 @@
 name: EulerPublisher 🚀
 on: [push]
 jobs:
-  build-openeuler:
-    strategy:
-      matrix:
-        include:
-          
-          - arch: x86_64
-            runner: ubuntu-24.04
-          
-    
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      
-      - name: Login to docker.io
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push by digest
-        uses: docker/build-push-action@v6
-        id: build
-        with: 
-          platforms: ${{ matrix.arch }}
-          tags: |
-            
-            docker.io/kaii0713/euler_repository-openeuler
-            
-          file: ${{ github.workspace }}/openeuler/Dockerfile
-          context: ${{ github.workspace }}/openeuler
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-
-      - name: Export digest
-        run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-openeuler-${{ matrix.arch }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  push-openeuler:
-    runs-on: ubuntu-24.04
-    needs:
-      - build-openeuler
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-openeuler-*
-          merge-multiple: true
-
-      
-      - name: Login to docker.io
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Create manifest list and push
-        working-directory: ${{ runner.temp }}/digests
-        run: |
-          
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository-openeuler:25.03 \
-            $(printf 'kaii0713/euler_repository-openeuler@sha256:%s ' *)
-          
-          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
-
-      # - name: Notify status to EulerPublisher
-      #   uses: eferraris/rabbit-sender@v1
-      #   with:
-      #     MESSAGE: |
-      #       {
-      #         "trigger": {
-      #           "type": "Github Actions",
-      #           "timestamp": "${{ env.timestamp }}"
-      #         },
-      #         "artifact": {
-      #           "type": "container",
-      #           "info": {
-      #             "archs": ["x86_64"],
-      #             "registries": ["docker.io"],
-      #             "repository": "kaii0713/euler_repository",
-      #             "name": "openeuler",
-      #             "version": "25.03",
-      #             "tag": "25.03",
-      #             "status": "${{ job.status }}"
-      #           }
-      #         }
-      #       }
-      #     RABBIT_EXCHANGE_NAME: "eulerpublisher"
-      #     ROUTING_KEY: "tracker"
-      #     RABBIT_HOST: ${{ secrets.RABBIT_HOST }}
-      #     RABBIT_USERNAME: ${{ secrets.RABBIT_USERNAME }}
-      #     RABBIT_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
-      #     RABBIT_PORT: 5672
-      #     RABBIT_USE_SSL: false
-      #     DURABLE: false
-
   build-python:
     strategy:
       matrix:
         include:
           
-          - arch: x86_64
+          - arch: ['openeuler', '25.03']
             runner: ubuntu-24.04
           
-    
-    needs: 
-      - push-openeuler
+          - arch: ['python', '3.10.1']
+            runner: ubuntu-24.04
+          
+          - arch: ['transformers', '4.55.4']
+            runner: ubuntu-24.04
+          
+          - arch: ['pytorch', '2.5.0']
+            runner: ubuntu-24.04
+          
+          - arch: ['langchain', '0.3']
+            runner: ubuntu-24.04
+          
     
     runs-on: ${{ matrix.runner }}
     steps:
@@ -140,12 +29,12 @@ jobs:
         uses: actions/checkout@v4
         
       
-      - name: Login to docker.io
+      - name: Login to x86_64
         uses: docker/login-action@v3
         with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
       
 
       - name: Set up QEMU
@@ -161,7 +50,7 @@ jobs:
           platforms: ${{ matrix.arch }}
           tags: |
             
-            docker.io/kaii0713/euler_repository-python
+            x86_64/Qwen3-Coder-30B-A3B-Instruct-python
             
           file: ${{ github.workspace }}/python/Dockerfile
           context: ${{ github.workspace }}/python
@@ -194,12 +83,12 @@ jobs:
           merge-multiple: true
 
       
-      - name: Login to docker.io
+      - name: Login to x86_64
         uses: docker/login-action@v3
         with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
       
 
       - name: Set up Docker Buildx
@@ -209,8 +98,8 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository-python:3.10.1-oe2503 \
-            $(printf 'kaii0713/euler_repository-python@sha256:%s ' *)
+          docker buildx imagetools create -t x86_64/Qwen3-Coder-30B-A3B-Instruct-python:3.10.1-None \
+            $(printf 'Qwen3-Coder-30B-A3B-Instruct-python@sha256:%s ' *)
           
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
@@ -226,258 +115,12 @@ jobs:
       #         "artifact": {
       #           "type": "container",
       #           "info": {
-      #             "archs": ["x86_64"],
-      #             "registries": ["docker.io"],
-      #             "repository": "kaii0713/euler_repository",
+      #             "archs": [["openeuler", "25.03"], ["python", "3.10.1"], ["transformers", "4.55.4"], ["pytorch", "2.5.0"], ["langchain", "0.3"]],
+      #             "registries": ["x86_64"],
+      #             "repository": "Qwen3-Coder-30B-A3B-Instruct",
       #             "name": "python",
       #             "version": "3.10.1",
-      #             "tag": "3.10.1-oe2503",
-      #             "status": "${{ job.status }}"
-      #           }
-      #         }
-      #       }
-      #     RABBIT_EXCHANGE_NAME: "eulerpublisher"
-      #     ROUTING_KEY: "tracker"
-      #     RABBIT_HOST: ${{ secrets.RABBIT_HOST }}
-      #     RABBIT_USERNAME: ${{ secrets.RABBIT_USERNAME }}
-      #     RABBIT_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
-      #     RABBIT_PORT: 5672
-      #     RABBIT_USE_SSL: false
-      #     DURABLE: false
-
-  build-huggingface_hub:
-    strategy:
-      matrix:
-        include:
-          
-          - arch: x86_64
-            runner: ubuntu-24.04
-          
-    
-    needs: 
-      - push-python
-    
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      
-      - name: Login to docker.io
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push by digest
-        uses: docker/build-push-action@v6
-        id: build
-        with: 
-          platforms: ${{ matrix.arch }}
-          tags: |
-            
-            docker.io/kaii0713/euler_repository-huggingface_hub
-            
-          file: ${{ github.workspace }}/huggingface_hub/Dockerfile
-          context: ${{ github.workspace }}/huggingface_hub
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-
-      - name: Export digest
-        run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-huggingface_hub-${{ matrix.arch }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  push-huggingface_hub:
-    runs-on: ubuntu-24.04
-    needs:
-      - build-huggingface_hub
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-huggingface_hub-*
-          merge-multiple: true
-
-      
-      - name: Login to docker.io
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Create manifest list and push
-        working-directory: ${{ runner.temp }}/digests
-        run: |
-          
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository-huggingface_hub:V0.35.0-python3.10.1-oe2503 \
-            $(printf 'kaii0713/euler_repository-huggingface_hub@sha256:%s ' *)
-          
-          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
-
-      # - name: Notify status to EulerPublisher
-      #   uses: eferraris/rabbit-sender@v1
-      #   with:
-      #     MESSAGE: |
-      #       {
-      #         "trigger": {
-      #           "type": "Github Actions",
-      #           "timestamp": "${{ env.timestamp }}"
-      #         },
-      #         "artifact": {
-      #           "type": "container",
-      #           "info": {
-      #             "archs": ["x86_64"],
-      #             "registries": ["docker.io"],
-      #             "repository": "kaii0713/euler_repository",
-      #             "name": "huggingface_hub",
-      #             "version": "V0.35.0",
-      #             "tag": "V0.35.0-python3.10.1-oe2503",
-      #             "status": "${{ job.status }}"
-      #           }
-      #         }
-      #       }
-      #     RABBIT_EXCHANGE_NAME: "eulerpublisher"
-      #     ROUTING_KEY: "tracker"
-      #     RABBIT_HOST: ${{ secrets.RABBIT_HOST }}
-      #     RABBIT_USERNAME: ${{ secrets.RABBIT_USERNAME }}
-      #     RABBIT_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
-      #     RABBIT_PORT: 5672
-      #     RABBIT_USE_SSL: false
-      #     DURABLE: false
-
-  build-transformers:
-    strategy:
-      matrix:
-        include:
-          
-          - arch: x86_64
-            runner: ubuntu-24.04
-          
-    
-    needs: 
-      - push-huggingface_hub
-    
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      
-      - name: Login to docker.io
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push by digest
-        uses: docker/build-push-action@v6
-        id: build
-        with: 
-          platforms: ${{ matrix.arch }}
-          tags: |
-            
-            docker.io/kaii0713/euler_repository-transformers
-            
-          file: ${{ github.workspace }}/transformers/Dockerfile
-          context: ${{ github.workspace }}/transformers
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-
-      - name: Export digest
-        run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-transformers-${{ matrix.arch }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  push-transformers:
-    runs-on: ubuntu-24.04
-    needs:
-      - build-transformers
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-transformers-*
-          merge-multiple: true
-
-      
-      - name: Login to docker.io
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Create manifest list and push
-        working-directory: ${{ runner.temp }}/digests
-        run: |
-          
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository-transformers:4.50.0-huggingface_hubV0.35.0-python3.10.1-oe2503 \
-            $(printf 'kaii0713/euler_repository-transformers@sha256:%s ' *)
-          
-          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
-
-      # - name: Notify status to EulerPublisher
-      #   uses: eferraris/rabbit-sender@v1
-      #   with:
-      #     MESSAGE: |
-      #       {
-      #         "trigger": {
-      #           "type": "Github Actions",
-      #           "timestamp": "${{ env.timestamp }}"
-      #         },
-      #         "artifact": {
-      #           "type": "container",
-      #           "info": {
-      #             "archs": ["x86_64"],
-      #             "registries": ["docker.io"],
-      #             "repository": "kaii0713/euler_repository",
-      #             "name": "transformers",
-      #             "version": "4.50.0",
-      #             "tag": "4.50.0-huggingface_hubV0.35.0-python3.10.1-oe2503",
+      #             "tag": "3.10.1-None",
       #             "status": "${{ job.status }}"
       #           }
       #         }
@@ -496,12 +139,24 @@ jobs:
       matrix:
         include:
           
-          - arch: x86_64
+          - arch: ['openeuler', '25.03']
+            runner: ubuntu-24.04
+          
+          - arch: ['python', '3.10.1']
+            runner: ubuntu-24.04
+          
+          - arch: ['transformers', '4.55.4']
+            runner: ubuntu-24.04
+          
+          - arch: ['pytorch', '2.5.0']
+            runner: ubuntu-24.04
+          
+          - arch: ['langchain', '0.3']
             runner: ubuntu-24.04
           
     
     needs: 
-      - push-transformers
+      - push-python
     
     runs-on: ${{ matrix.runner }}
     steps:
@@ -509,12 +164,12 @@ jobs:
         uses: actions/checkout@v4
         
       
-      - name: Login to docker.io
+      - name: Login to x86_64
         uses: docker/login-action@v3
         with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
       
 
       - name: Set up QEMU
@@ -530,7 +185,7 @@ jobs:
           platforms: ${{ matrix.arch }}
           tags: |
             
-            docker.io/kaii0713/euler_repository-pytorch
+            x86_64/Qwen3-Coder-30B-A3B-Instruct-pytorch
             
           file: ${{ github.workspace }}/pytorch/Dockerfile
           context: ${{ github.workspace }}/pytorch
@@ -563,12 +218,12 @@ jobs:
           merge-multiple: true
 
       
-      - name: Login to docker.io
+      - name: Login to x86_64
         uses: docker/login-action@v3
         with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
       
 
       - name: Set up Docker Buildx
@@ -578,8 +233,8 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository-pytorch:2.5.0-transformers4.50.0-huggingface_hubV0.35.0-python3.10.1-oe2503 \
-            $(printf 'kaii0713/euler_repository-pytorch@sha256:%s ' *)
+          docker buildx imagetools create -t x86_64/Qwen3-Coder-30B-A3B-Instruct-pytorch:2.5.0-python3.10.1-None \
+            $(printf 'Qwen3-Coder-30B-A3B-Instruct-pytorch@sha256:%s ' *)
           
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
@@ -595,12 +250,282 @@ jobs:
       #         "artifact": {
       #           "type": "container",
       #           "info": {
-      #             "archs": ["x86_64"],
-      #             "registries": ["docker.io"],
-      #             "repository": "kaii0713/euler_repository",
+      #             "archs": [["openeuler", "25.03"], ["python", "3.10.1"], ["transformers", "4.55.4"], ["pytorch", "2.5.0"], ["langchain", "0.3"]],
+      #             "registries": ["x86_64"],
+      #             "repository": "Qwen3-Coder-30B-A3B-Instruct",
       #             "name": "pytorch",
       #             "version": "2.5.0",
-      #             "tag": "2.5.0-transformers4.50.0-huggingface_hubV0.35.0-python3.10.1-oe2503",
+      #             "tag": "2.5.0-python3.10.1-None",
+      #             "status": "${{ job.status }}"
+      #           }
+      #         }
+      #       }
+      #     RABBIT_EXCHANGE_NAME: "eulerpublisher"
+      #     ROUTING_KEY: "tracker"
+      #     RABBIT_HOST: ${{ secrets.RABBIT_HOST }}
+      #     RABBIT_USERNAME: ${{ secrets.RABBIT_USERNAME }}
+      #     RABBIT_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
+      #     RABBIT_PORT: 5672
+      #     RABBIT_USE_SSL: false
+      #     DURABLE: false
+
+  build-transformers:
+    strategy:
+      matrix:
+        include:
+          
+          - arch: ['openeuler', '25.03']
+            runner: ubuntu-24.04
+          
+          - arch: ['python', '3.10.1']
+            runner: ubuntu-24.04
+          
+          - arch: ['transformers', '4.55.4']
+            runner: ubuntu-24.04
+          
+          - arch: ['pytorch', '2.5.0']
+            runner: ubuntu-24.04
+          
+          - arch: ['langchain', '0.3']
+            runner: ubuntu-24.04
+          
+    
+    needs: 
+      - push-pytorch
+    
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      
+      - name: Login to x86_64
+        uses: docker/login-action@v3
+        with:
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
+      
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push by digest
+        uses: docker/build-push-action@v6
+        id: build
+        with: 
+          platforms: ${{ matrix.arch }}
+          tags: |
+            
+            x86_64/Qwen3-Coder-30B-A3B-Instruct-transformers
+            
+          file: ${{ github.workspace }}/transformers/Dockerfile
+          context: ${{ github.workspace }}/transformers
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-transformers-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  push-transformers:
+    runs-on: ubuntu-24.04
+    needs:
+      - build-transformers
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-transformers-*
+          merge-multiple: true
+
+      
+      - name: Login to x86_64
+        uses: docker/login-action@v3
+        with:
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
+      
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          
+          docker buildx imagetools create -t x86_64/Qwen3-Coder-30B-A3B-Instruct-transformers:4.55.4-pytorch2.5.0-python3.10.1-None \
+            $(printf 'Qwen3-Coder-30B-A3B-Instruct-transformers@sha256:%s ' *)
+          
+          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+      # - name: Notify status to EulerPublisher
+      #   uses: eferraris/rabbit-sender@v1
+      #   with:
+      #     MESSAGE: |
+      #       {
+      #         "trigger": {
+      #           "type": "Github Actions",
+      #           "timestamp": "${{ env.timestamp }}"
+      #         },
+      #         "artifact": {
+      #           "type": "container",
+      #           "info": {
+      #             "archs": [["openeuler", "25.03"], ["python", "3.10.1"], ["transformers", "4.55.4"], ["pytorch", "2.5.0"], ["langchain", "0.3"]],
+      #             "registries": ["x86_64"],
+      #             "repository": "Qwen3-Coder-30B-A3B-Instruct",
+      #             "name": "transformers",
+      #             "version": "4.55.4",
+      #             "tag": "4.55.4-pytorch2.5.0-python3.10.1-None",
+      #             "status": "${{ job.status }}"
+      #           }
+      #         }
+      #       }
+      #     RABBIT_EXCHANGE_NAME: "eulerpublisher"
+      #     ROUTING_KEY: "tracker"
+      #     RABBIT_HOST: ${{ secrets.RABBIT_HOST }}
+      #     RABBIT_USERNAME: ${{ secrets.RABBIT_USERNAME }}
+      #     RABBIT_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
+      #     RABBIT_PORT: 5672
+      #     RABBIT_USE_SSL: false
+      #     DURABLE: false
+
+  build-langchain:
+    strategy:
+      matrix:
+        include:
+          
+          - arch: ['openeuler', '25.03']
+            runner: ubuntu-24.04
+          
+          - arch: ['python', '3.10.1']
+            runner: ubuntu-24.04
+          
+          - arch: ['transformers', '4.55.4']
+            runner: ubuntu-24.04
+          
+          - arch: ['pytorch', '2.5.0']
+            runner: ubuntu-24.04
+          
+          - arch: ['langchain', '0.3']
+            runner: ubuntu-24.04
+          
+    
+    needs: 
+      - push-transformers
+    
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      
+      - name: Login to x86_64
+        uses: docker/login-action@v3
+        with:
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
+      
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push by digest
+        uses: docker/build-push-action@v6
+        id: build
+        with: 
+          platforms: ${{ matrix.arch }}
+          tags: |
+            
+            x86_64/Qwen3-Coder-30B-A3B-Instruct-langchain
+            
+          file: ${{ github.workspace }}/langchain/Dockerfile
+          context: ${{ github.workspace }}/langchain
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-langchain-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  push-langchain:
+    runs-on: ubuntu-24.04
+    needs:
+      - build-langchain
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-langchain-*
+          merge-multiple: true
+
+      
+      - name: Login to x86_64
+        uses: docker/login-action@v3
+        with:
+          registry: x86_64
+          username: ${{ secrets.X86_64_USERNAME }}
+          password: ${{ secrets.X86_64_TOKEN }}
+      
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          
+          docker buildx imagetools create -t x86_64/Qwen3-Coder-30B-A3B-Instruct-langchain:0.3-transformers4.55.4-pytorch2.5.0-python3.10.1-None \
+            $(printf 'Qwen3-Coder-30B-A3B-Instruct-langchain@sha256:%s ' *)
+          
+          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+      # - name: Notify status to EulerPublisher
+      #   uses: eferraris/rabbit-sender@v1
+      #   with:
+      #     MESSAGE: |
+      #       {
+      #         "trigger": {
+      #           "type": "Github Actions",
+      #           "timestamp": "${{ env.timestamp }}"
+      #         },
+      #         "artifact": {
+      #           "type": "container",
+      #           "info": {
+      #             "archs": [["openeuler", "25.03"], ["python", "3.10.1"], ["transformers", "4.55.4"], ["pytorch", "2.5.0"], ["langchain", "0.3"]],
+      #             "registries": ["x86_64"],
+      #             "repository": "Qwen3-Coder-30B-A3B-Instruct",
+      #             "name": "langchain",
+      #             "version": "0.3",
+      #             "tag": "0.3-transformers4.55.4-pytorch2.5.0-python3.10.1-None",
       #             "status": "${{ job.status }}"
       #           }
       #         }

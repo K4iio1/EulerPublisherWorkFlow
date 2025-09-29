@@ -1,4 +1,4 @@
-ARG BASE=kaii0713/euler_repository-transformers:4.50.0-huggingface_hubV0.35.0-python3.10.1-oe2503
+ARG BASE=Qwen3-Coder-30B-A3B-Instruct-python:3.10.1-None
 
 ARG VERSION=2.5.0
 
