@@ -1,29 +1,31 @@
+name: Build Python Demo
 
-name: EulerPublisher 🚀
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 jobs:
-  build-openeuler:
+  build-python-demo:
     strategy:
       matrix:
         include:
-          
-          - arch: x86_64
-            runner: ubuntu-24.04
-          
-    
+          - arch: linux/amd64
+            runner: ubuntu-latest
+          - arch: linux/arm64
+            runner: ubuntu-latest-arm
+
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      
-      - name: Login to docker.io
+
+      - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -31,259 +33,55 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 对 openeuler 特殊处理，原模板 git action 会报错显示 openeuler 无法通过digest处理
-      - name: Build and push multi-arch (for openeuler)
-        if: True
-        uses: docker/build-push-action@v6
-        with:
-          platforms: ${{ matrix.arch }}
-          tags: |
-            
-            docker.io/kaii0713/euler_repository:openeuler
-            
-          file: ${{ github.workspace }}/openeuler/Dockerfile
-          context: ${{ github.workspace }}/openeuler
-          push: true
-
       - name: Build and push by digest
-        if: False
         uses: docker/build-push-action@v6
         id: build
         with: 
           platforms: ${{ matrix.arch }}
           tags: |
-            
-            docker.io/kaii0713/euler_repository:openeuler
-            
-          file: ${{ github.workspace }}/openeuler/Dockerfile
-          context: ${{ github.workspace }}/openeuler
+            docker.io/${{ secrets.DOCKER_USERNAME }}/python-demo
+          file: ${{ github.workspace }}/python-demo/Dockerfile
+          context: ${{ github.workspace }}/python-demo
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
-        if: False
         run: |
           mkdir -p ${{ runner.temp }}/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        if: False
         uses: actions/upload-artifact@v4
         with:
-          name: digests-openeuler-${{ matrix.arch }}
+          name: digests-python-demo-${{ matrix.arch }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
           retention-days: 1
 
-  push-openeuler:
-    runs-on: ubuntu-24.04
+  push-python-demo:
+    runs-on: ubuntu-latest
     needs:
-      - build-openeuler
+      - build-python-demo
     steps:
       - name: Download digests
-        if: False
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/digests
-          pattern: digests-openeuler-*
+          pattern: digests-python-demo-*
           merge-multiple: true
 
-      
-      - name: Login to docker.io
-        if: False
+      - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Set up Docker Buildx
-        if: False
         uses: docker/setup-buildx-action@v3
 
       - name: Create manifest list and push
-        if: False
         working-directory: ${{ runner.temp }}/digests
         run: |
-          
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/openeuler:22.03-lts \
-            $(printf 'kaii0713/euler_repository/openeuler@sha256:%s ' *)
-          
+          docker buildx imagetools create -t docker.io/${{ secrets.DOCKER_USERNAME }}/python-demo:latest \
+            $(printf 'docker.io/${{ secrets.DOCKER_USERNAME }}/python-demo@sha256:%s ' *)
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
-
-      # - name: Notify status to EulerPublisher
-      #   uses: eferraris/rabbit-sender@v1
-      #   with:
-      #     MESSAGE: |
-      #       {
-      #         "trigger": {
-      #           "type": "Github Actions",
-      #           "timestamp": "${{ env.timestamp }}"
-      #         },
-      #         "artifact": {
-      #           "type": "container",
-      #           "info": {
-      #             "archs": ["x86_64"],
-      #             "registries": ["docker.io"],
-      #             "repository": "kaii0713/euler_repository",
-      #             "name": "openeuler",
-      #             "version": "22.03.LTS",
-      #             "tag": "22.03-lts",
-      #             "status": "${{ job.status }}"
-      #           }
-      #         }
-      #       }
-      #     RABBIT_EXCHANGE_NAME: "eulerpublisher"
-      #     ROUTING_KEY: "tracker"
-      #     RABBIT_HOST: ${{ secrets.RABBIT_HOST }}
-      #     RABBIT_USERNAME: ${{ secrets.RABBIT_USERNAME }}
-      #     RABBIT_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
-      #     RABBIT_PORT: 5672
-      #     RABBIT_USE_SSL: false
-      #     DURABLE: false
-
-  build-python:
-    strategy:
-      matrix:
-        include:
-          
-          - arch: x86_64
-            runner: ubuntu-24.04
-          
-    
-    needs: 
-      - push-openeuler
-    
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      
-      - name: Login to docker.io
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 对 openeuler 特殊处理，原模板 git action 会报错显示 openeuler 无法通过digest处理
-      - name: Build and push multi-arch (for openeuler)
-        if: False
-        uses: docker/build-push-action@v6
-        with:
-          platforms: ${{ matrix.arch }}
-          tags: |
-            
-            docker.io/kaii0713/euler_repository:python
-            
-          file: ${{ github.workspace }}/python/Dockerfile
-          context: ${{ github.workspace }}/python
-          push: true
-
-      - name: Build and push by digest
-        if: True
-        uses: docker/build-push-action@v6
-        id: build
-        with: 
-          platforms: ${{ matrix.arch }}
-          tags: |
-            
-            docker.io/kaii0713/euler_repository:python
-            
-          file: ${{ github.workspace }}/python/Dockerfile
-          context: ${{ github.workspace }}/python
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-
-      - name: Export digest
-        if: True
-        run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        if: True
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-python-${{ matrix.arch }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  push-python:
-    runs-on: ubuntu-24.04
-    needs:
-      - build-python
-    steps:
-      - name: Download digests
-        if: True
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-python-*
-          merge-multiple: true
-
-      
-      - name: Login to docker.io
-        if: True
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKER_IO_USERNAME }}
-          password: ${{ secrets.DOCKER_IO_TOKEN }}
-      
-
-      - name: Set up Docker Buildx
-        if: True
-        uses: docker/setup-buildx-action@v3
-
-      - name: Create manifest list and push
-        if: True
-        working-directory: ${{ runner.temp }}/digests
-        run: |
-          
-          docker buildx imagetools create -t docker.io/kaii0713/euler_repository/python:3.10.1-oe2203lts \
-            $(printf 'kaii0713/euler_repository/python@sha256:%s ' *)
-          
-          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
-
-      # - name: Notify status to EulerPublisher
-      #   uses: eferraris/rabbit-sender@v1
-      #   with:
-      #     MESSAGE: |
-      #       {
-      #         "trigger": {
-      #           "type": "Github Actions",
-      #           "timestamp": "${{ env.timestamp }}"
-      #         },
-      #         "artifact": {
-      #           "type": "container",
-      #           "info": {
-      #             "archs": ["x86_64"],
-      #             "registries": ["docker.io"],
-      #             "repository": "kaii0713/euler_repository",
-      #             "name": "python",
-      #             "version": "3.10.1",
-      #             "tag": "3.10.1-oe2203lts",
-      #             "status": "${{ job.status }}"
-      #           }
-      #         }
-      #       }
-      #     RABBIT_EXCHANGE_NAME: "eulerpublisher"
-      #     ROUTING_KEY: "tracker"
-      #     RABBIT_HOST: ${{ secrets.RABBIT_HOST }}
-      #     RABBIT_USERNAME: ${{ secrets.RABBIT_USERNAME }}
-      #     RABBIT_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
-      #     RABBIT_PORT: 5672
-      #     RABBIT_USE_SSL: false
-      #     DURABLE: false
-
