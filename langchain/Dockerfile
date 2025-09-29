@@ -1,4 +1,4 @@
-ARG BASE=kaii0713/euler_repository-transformers:4.55.4-python3.10.1-oe2503
+ARG BASE=kaii0713/euler_repository-matplotlib:3.9-pytorch2.6.0-python3.9.1-oe2503
 
 ARG VERSION=0.3
 
