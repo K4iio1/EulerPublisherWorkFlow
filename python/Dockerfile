@@ -1,4 +1,4 @@
-ARG BASE=scratch
+ARG BASE=Qwen3-Coder-30B-A3B-Instruct-openeuler:25.03
 ARG VERSION=3.10.1
 
 FROM ${BASE} as builder
